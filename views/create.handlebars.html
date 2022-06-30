@@ -1,0 +1,153 @@
+<html>
+<div>
+    <form method="POST" id="create">
+        <h1>Productos</h1>
+        <div>
+               <label style="width: 200px">Title</label>
+               <input id="title" type="text" name="title" />
+        </div>
+        <br/>
+        <div>
+               <label style="width: 200px">Price</label>
+               <input id="price" type="text" name="price" />
+        </div>       
+        <br/>       
+        <div>
+               <label style="width: 200px">Thumbnail</label>
+               <input id="thumbnail" type="text" name="thumbnail" />
+        </div>
+        <br/>
+        <div>
+                <button type="submit">Submit</button>
+                <input type="button" onclick="window.location.href = 'http://localhost:8080/productos';" value="Go To Product List"/>
+        </div>        
+    </form>
+    <form method="POST" id="list">
+        <p>List of Products</p>        
+        <div id="product-list"></div>
+    </form>
+    <form method="POST" id="chat">
+        <h1>Centro de Mensajes</h1>
+        <div>
+            <input type="text" id="email" placeholder="Tu Email" >        
+        </div>        
+        <br/>        
+        <div id="message-list"></div>
+        <br/>
+        <input type="text" id="message" placeholder="Ingresa tu mensaje" >
+        <input type="submit" value="Enviar">
+    </form>    
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const formCreate = document.getElementById('create');
+    const formChat = document.getElementById('chat');
+    const socket = io.connect();
+
+    formCreate.onsubmit = function(e) {
+        e.preventDefault();
+        addProduct(e);
+    }
+
+    formChat.onsubmit = function(e) {
+        e.preventDefault();
+        addMessage(e);
+    }    
+    
+    function addProduct(e) {
+        const product = {
+            title: document.getElementById("title").value,
+            price: document.getElementById("price").value,
+            thumbnail: document.getElementById("thumbnail").value,
+        };
+
+        document.getElementById("title").value = "";
+        document.getElementById("price").value = "";
+        document.getElementById("thumbnail").value = "";                
+        socket.emit("new-product", product);
+        return false;
+    }    
+
+    function addMessage(e) {
+        let email = document.getElementById("email").value;
+        let validationEmail = validateEmail(email);
+        if (!validationEmail) return;    
+
+        const message = {
+            email: email,
+            date: dateWithFormat(new Date()),
+            message: document.getElementById("message").value,
+        };
+
+        document.getElementById("message").value = "";
+        socket.emit("new-message", message);
+        return false;
+    }
+
+    socket.on("product-list", (data) => {
+        renderProductList(data);
+    });
+
+    socket.on("message-list", (data) => {
+        renderMessageList(data);
+    });
+
+    async function renderProductList(data) {
+        if (data.length === 0) {
+            document.getElementById("product-list").innerHTML = `<p>No hay Productos</p>`;
+            return;                    
+        }
+        const html = data
+            .map((element, index) => {
+            return `<tr>
+                        <td>${element.title}</td> 
+                        <td>${element.price}</td>                
+                        <td><img src="${element.thumbnail}"></td>
+                    </tr>`;
+            })
+            .join(" ");
+        let template = await (await fetch('static/table.html')).text();
+        template = template.replace('${html}', html);
+        document.getElementById("product-list").innerHTML = template;
+    }
+
+    function renderMessageList(data) {
+        const html = data
+            .map((element, index) => {
+            return `<div>
+                        <label style="color:blue;">${element.email}</label><label style="color:#A52A2A;"> [${element.date}]</label>:
+                        <em style="color:#00FF00;">${element.message}</em> 
+                    </div>`;
+            })
+            .join(" ");
+        document.getElementById("message-list").innerHTML = html;
+    }    
+
+    function dateWithFormat(date) {
+        let dateStr =
+        ("00" + (date.getMonth() + 1)).slice(-2) + "/" +
+        ("00" + date.getDate()).slice(-2) + "/" +
+        date.getFullYear() + " " +
+        ("00" + date.getHours()).slice(-2) + ":" +
+        ("00" + date.getMinutes()).slice(-2) + ":" +
+        ("00" + date.getSeconds()).slice(-2);
+        return dateStr;
+    }
+
+    function validateEmail(email) 
+    {
+           var re = /\S+@\S+\.\S+/;
+           if(email.match(re))
+           {
+           return true;
+           }
+           else
+           {
+           alert('Correo: Please introduce correct format');
+           return false;
+           }              
+    }    
+
+</script>
+</html>

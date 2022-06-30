@@ -1,0 +1,18 @@
+{
+  "name": "alison_coder_house",
+  "version": "1.0.0",
+  "description": "my_project",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Alison Janise Paico Quispe",
+  "license": "ISC",
+  "dependencies": {
+    "ejs": "^3.1.8",
+    "express": "^4.18.1",
+    "express-handlebars": "^6.0.6",
+    "socket.io": "^4.5.1"
+  }
+}
